@@ -1,8 +1,11 @@
 {
   "name": "switch-to-spec",
   "displayName": "Switch between Code/Test",
-  "description": "Switches code-file and test-file",
+  "description": "Switches between code-file and test-file",
   "version": "0.0.2",
+  "repository": {
+    "url": "https://github.com/bjornua/vscode-switch-code-test"
+  },
   "engines": {
     "vscode": "^1.43.0"
   },

@@ -12,6 +12,7 @@ function getAltFile(filePath: string): string | null {
       base: `${p.base.slice(0, -8)}.js`
     });
   }
+
   if (!p.dir.startsWith("test") && p.base.endsWith(".js")) {
     return path.format({
       dir: path.join("test", p.dir),
@@ -31,7 +32,6 @@ export function activate(context: vscode.ExtensionContext) {
     "extension.switchToSpec",
     async () => {
       // The code you place here will be executed every time your command is executed
-
       const absFileURI = vscode.window.activeTextEditor?.document.uri;
       if (absFileURI === undefined) {
         return;
