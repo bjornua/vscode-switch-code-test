@@ -13,3 +13,10 @@ Or use the command: `Switch between Code/Test`
 ## Requirements
 
 For now, this plugin is not configurable and assumes the directory structure in the above example.
+
+## Resources
+
+| Resource         | URL                                                                              |
+| ---------------- | -------------------------------------------------------------------------------- |
+| Repository       | https://github.com/bjornua/vscode-switch-code-test                               |
+| Marketplace Page | https://marketplace.visualstudio.com/items?itemName=BjornArnholtz.switch-to-spec |

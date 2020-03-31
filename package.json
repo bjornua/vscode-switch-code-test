@@ -1,6 +1,6 @@
 {
   "name": "switch-to-spec",
-  "displayName": "Switch to spec",
+  "displayName": "Switch between Code/Test",
   "description": "Switches code-file and test-file",
   "version": "0.0.2",
   "engines": {
