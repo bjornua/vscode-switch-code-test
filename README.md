@@ -20,3 +20,7 @@ For now, this plugin is not configurable and assumes the directory structure in 
 | ---------------- | -------------------------------------------------------------------------------- |
 | Repository       | https://github.com/bjornua/vscode-switch-code-test                               |
 | Marketplace Page | https://marketplace.visualstudio.com/items?itemName=BjornArnholtz.switch-to-spec |
+
+# Changelog
+
+- `V0.0.3`: Create path if it does not exist

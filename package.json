@@ -2,7 +2,7 @@
   "name": "switch-to-spec",
   "displayName": "Switch between Code/Test",
   "description": "Switches between code-file and test-file",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "repository": {
     "url": "https://github.com/bjornua/vscode-switch-code-test"
   },
