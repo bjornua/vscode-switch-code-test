@@ -24,3 +24,4 @@ For now, this plugin is not configurable and assumes the directory structure in 
 # Changelog
 
 - `V0.0.3`: Create path if it does not exist
+- `V0.0.4`: Add support for alternative "tests" folder

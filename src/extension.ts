@@ -4,19 +4,31 @@ import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
 
-function getAltFile(filePath: string): string | null {
+function findTestFolder(
+  rootFolder: string,
+  folders: Array<string>
+): string | null {
+  for (const f of folders) {
+    if (fs.existsSync(path.join(rootFolder, f))) {
+      return f;
+    }
+  }
+  return null;
+}
+
+function getAltFile(testFolderName: string, filePath: string): string | null {
   const p = path.parse(filePath);
 
-  if (p.dir.startsWith("test") && p.base.endsWith(".spec.js")) {
+  if (p.dir.startsWith(testFolderName) && p.base.endsWith(".spec.js")) {
     return path.format({
-      dir: path.relative("test", p.dir),
+      dir: path.relative(testFolderName, p.dir),
       base: `${p.base.slice(0, -8)}.js`,
     });
   }
 
-  if (!p.dir.startsWith("test") && p.base.endsWith(".js")) {
+  if (!p.dir.startsWith(testFolderName) && p.base.endsWith(".js")) {
     return path.format({
-      dir: path.join("test", p.dir),
+      dir: path.join(testFolderName, p.dir),
       base: `${p.base.slice(0, -3)}.spec.js`,
     });
   }
@@ -49,7 +61,13 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
 
-      const altFilePath = getAltFile(current.path);
+      const testFolder = findTestFolder(current.root, ["tests", "test"]);
+
+      if (testFolder === null) {
+        return null;
+      }
+
+      const altFilePath = getAltFile(testFolder, current.path);
 
       if (altFilePath === null) {
         return;
