@@ -25,3 +25,4 @@ For now, this plugin is not configurable and assumes the directory structure in 
 
 - `V0.0.3`: Create path if it does not exist
 - `V0.0.4`: Add support for alternative "tests" folder
+- `V0.0.5`: Ask before creating files
