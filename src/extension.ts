@@ -4,20 +4,29 @@ import * as vscode from "vscode";
 import * as pathlib from "path";
 import * as fs from "fs";
 
-function findTestFolder(
+const SOURCE_FOLDER_NAME = "src";
+
+type TestAndSourceFolders = Readonly<{
+  containingFolder: string;
+  testFolderName: string;
+  hasSourceFolder: boolean;
+}>;
+
+function findTestAndSourceFolders(
   rootFolder: string,
   rootRelativeDirname: string,
   folders: Array<string>
-): { pathToTestFolder: string, testFolderName: string } | null {
+): TestAndSourceFolders | null {
   // Traverse outwards and try to find the first test folder in a parent directory:
   const relativeFragments = rootRelativeDirname.length > 0 ? rootRelativeDirname.split(pathlib.sep) : [];
   for (let i = relativeFragments.length ; i >= 0 ; i -= 1) {
     for (const testFolderName of folders) {
-      const pathToTestFolder = relativeFragments.slice(0, i).join(pathlib.sep);
-      if (fs.existsSync(pathlib.join(rootFolder, pathlib.join(pathToTestFolder, testFolderName)))) {
+      const containingFolder = relativeFragments.slice(0, i).join(pathlib.sep);
+      if (fs.existsSync(pathlib.join(rootFolder, pathlib.join(containingFolder, testFolderName)))) {
         return {
-          pathToTestFolder,
-          testFolderName
+          containingFolder,
+          testFolderName,
+          hasSourceFolder: fs.existsSync(pathlib.join(rootFolder, pathlib.join(containingFolder, SOURCE_FOLDER_NAME))),
         };
       }
     }
@@ -40,23 +49,26 @@ async function createFile(path: string) {
   return true;
 }
 
-function getAltFile(pathToTestFolder: string, testFolderName: string, filePath: string): string | null {
+function getAltFile({ containingFolder, testFolderName, hasSourceFolder }: TestAndSourceFolders, filePath: string): string | null {
   const p = pathlib.parse(filePath);
-  const isInsideTestFolder = p.dir.startsWith(pathlib.join(pathToTestFolder, testFolderName));
+  const isInsideTestFolder = p.dir.startsWith(pathlib.join(containingFolder, testFolderName));
 
-  if (isInsideTestFolder && p.base.endsWith(".spec.js")) {
-    return pathlib.format({
-      dir: pathlib.join(pathToTestFolder, pathlib.relative(pathlib.join(pathToTestFolder, testFolderName), p.dir)),
-      base: `${p.base.slice(0, -8)}.js`,
-    });
+  if ([".js", ".ts"].includes(p.ext)) {
+    if (isInsideTestFolder && p.name.endsWith(".spec")) {
+      return pathlib.format({
+        dir: pathlib.join(containingFolder, ...(hasSourceFolder ? [SOURCE_FOLDER_NAME] : []), pathlib.relative(pathlib.join(containingFolder, testFolderName), p.dir)),
+        base: `${p.name.slice(0, -5)}${p.ext}`,
+      });
+    }
+    
+    if (!isInsideTestFolder) {
+      return pathlib.format({
+        dir: pathlib.join(containingFolder, testFolderName, pathlib.relative(containingFolder, hasSourceFolder ? p.dir.split(pathlib.sep).slice(1).join(pathlib.sep) : p.dir)),
+        base: `${p.name}.spec${p.ext}`,
+      });
+    }
   }
 
-  if (!isInsideTestFolder && p.base.endsWith(".js")) {
-    return pathlib.format({
-      dir: pathlib.join(pathToTestFolder, testFolderName, pathlib.relative(pathToTestFolder, p.dir)),
-      base: `${p.base.slice(0, -3)}.spec.js`,
-    });
-  }
   return null;
 }
 
@@ -83,13 +95,13 @@ async function command() {
     return;
   }
 
-  const testFolder = findTestFolder(current.root, pathlib.dirname(current.path), ["tests", "test"]);
+  const testAndSourceFolders = findTestAndSourceFolders(current.root, pathlib.dirname(current.path), ["tests", "test"]);
 
-  if (testFolder === null) {
+  if (testAndSourceFolders === null) {
     return null;
   }
 
-  const altFilePath = getAltFile(testFolder.pathToTestFolder, testFolder.testFolderName, current.path);
+  const altFilePath = getAltFile(testAndSourceFolders, current.path);
 
   if (altFilePath === null) {
     return;
