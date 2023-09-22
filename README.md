@@ -23,6 +23,7 @@ For now, this plugin is not configurable and assumes the directory structure in 
 
 # Changelog
 
+- `V0.0.7`: Add support for .ts and src folder ([@martinslota](https://github.com/martinslota))
 - `V0.0.6`: /some/subdir/test folder location now supported ([@papaendrou](https://github.com/papandreou))
 - `V0.0.5`: Ask before creating files
 - `V0.0.4`: Add support for alternative "tests" folder
