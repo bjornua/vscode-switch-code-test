@@ -103,18 +103,17 @@ async function openOrCreate(root: string, relPathCandidates: string[]) {
   const existingPathPair = pathPairs.find(({ absPath }) =>
     fs.existsSync(absPath)
   );
-  if (existingPathPair) {
-    const doc = await vscode.workspace.openTextDocument(
-      existingPathPair.absPath
-    );
-    await vscode.window.showTextDocument(doc);
-  } else {
-    const { relPath, absPath } = pathPairs[0];
+
+  const { relPath, absPath } = existingPathPair ?? pathPairs[0];
+  if (existingPathPair === undefined) {
     if (!(await promptForFileCreation(relPath))) {
       return;
     }
     await createFile(absPath);
   }
+
+  const doc = await vscode.workspace.openTextDocument(absPath);
+  await vscode.window.showTextDocument(doc);
 }
 
 function getCorrespondingSourceFileCandidates(
