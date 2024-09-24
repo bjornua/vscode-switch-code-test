@@ -103,7 +103,7 @@ async function openOrCreate(root: string, relPathCandidates: string[]) {
   const existingPathPair = pathPairs.find(({ absPath }) =>
     fs.existsSync(absPath)
   );
-  if (existingPathPair) {
+  if (existingPathPair !== undefined) {
     const doc = await vscode.workspace.openTextDocument(
       existingPathPair.absPath
     );
