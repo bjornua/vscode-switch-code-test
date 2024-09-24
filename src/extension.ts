@@ -74,12 +74,12 @@ async function handleTestFile(
   testAndSourceFolders: TestAndSourceFolders,
   sourceFolderName: string
 ) {
-  const correspondingFilePath = getCorrespondingSourceFile(
+  const sourceFileCandidates = getCorrespondingSourceFileCandidates(
     current.path,
     testAndSourceFolders,
     sourceFolderName
   );
-  await openOrCreateByPath(current.root, correspondingFilePath);
+  await openOrCreate(current.root, sourceFileCandidates);
 }
 
 async function handleSourceFile(
@@ -87,28 +87,37 @@ async function handleSourceFile(
   testAndSourceFolders: TestAndSourceFolders,
   sourceFolderName: string
 ) {
-  const correspondingFilePath = getCorrespondingTestFile(
+  const testFileCandidates = getCorrespondingTestFileCandidates(
     current.path,
     testAndSourceFolders,
     sourceFolderName
   );
-  await openOrCreateByPath(current.root, correspondingFilePath);
+  await openOrCreate(current.root, testFileCandidates);
 }
 
-async function openOrCreateByPath(root: string, relPath: string) {
-  const absPath = pathlib.join(root, relPath);
-  if (!fs.existsSync(absPath)) {
+async function openOrCreate(root: string, relPathCandidates: string[]) {
+  const pathPairs = relPathCandidates.map((relPath) => ({
+    relPath,
+    absPath: pathlib.join(root, relPath),
+  }));
+  const existingPathPair = pathPairs.find(({ absPath }) =>
+    fs.existsSync(absPath)
+  );
+  if (existingPathPair) {
+    const doc = await vscode.workspace.openTextDocument(
+      existingPathPair.absPath
+    );
+    await vscode.window.showTextDocument(doc);
+  } else {
+    const { relPath, absPath } = pathPairs[0];
     if (!(await promptForFileCreation(relPath))) {
       return;
     }
     await createFile(absPath);
   }
-
-  const doc = await vscode.workspace.openTextDocument(absPath);
-  await vscode.window.showTextDocument(doc);
 }
 
-function getCorrespondingSourceFile(
+function getCorrespondingSourceFileCandidates(
   filePath: string,
   { containingFolder, hasSourceFolder, testFolderName }: TestAndSourceFolders,
   sourceFolderName: string
@@ -118,17 +127,19 @@ function getCorrespondingSourceFile(
     pathlib.join(containingFolder, testFolderName),
     p.dir
   );
-  return pathlib.format({
-    dir: pathlib.join(
-      containingFolder,
-      ...(hasSourceFolder ? [sourceFolderName] : []),
-      subdirs
-    ),
-    base: `${p.name.replace(".spec", "")}${p.ext}`,
-  });
+  return getExtensionCandidates(p).map((ext) =>
+    pathlib.format({
+      dir: pathlib.join(
+        containingFolder,
+        ...(hasSourceFolder ? [sourceFolderName] : []),
+        subdirs
+      ),
+      base: `${p.name.replace(".spec", "")}${ext}`,
+    })
+  );
 }
 
-function getCorrespondingTestFile(
+function getCorrespondingTestFileCandidates(
   filePath: string,
   { containingFolder, testFolderName, hasSourceFolder }: TestAndSourceFolders,
   sourceFolderName: string
@@ -137,10 +148,18 @@ function getCorrespondingTestFile(
   const subdirs = hasSourceFolder
     ? pathlib.relative(pathlib.join(containingFolder, sourceFolderName), p.dir)
     : pathlib.relative(containingFolder, p.dir);
-  return pathlib.format({
-    dir: pathlib.join(containingFolder, testFolderName, subdirs),
-    base: `${p.name}.spec${p.ext}`,
-  });
+
+  return getExtensionCandidates(p).map((ext) =>
+    pathlib.format({
+      dir: pathlib.join(containingFolder, testFolderName, subdirs),
+      base: `${p.name}.spec${ext}`,
+    })
+  );
+}
+
+function getExtensionCandidates(path: pathlib.ParsedPath) {
+  const { ext } = path;
+  return [ext, ext === ".ts" ? ".js" : ".ts"];
 }
 
 function locateTestAndSourceDirectories(
